@@ -1,0 +1,21 @@
+name = "hyperdrive-failure"
+main = "build/index.js"
+compatibility_date = "2026-09-02"
+# new_module_registry gives the Emscripten glue `import.meta.url`.
+compatibility_flags = ["new_module_registry"]
+
+[build]
+command = "worker-build --emscripten --out-dir build"
+
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "<hyperdrive-id>"
+localConnectionString = "postgresql://postgres:postgres@127.0.0.1:5432/postgres?sslmode=disable"
+remote = true # must be remote; this bug does not occur on local connection
+
+[observability]
+enabled = true
+
+[placement]
+# where the database is
+region = "aws:ap-southeast-1"

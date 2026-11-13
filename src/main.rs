@@ -1,0 +1,31 @@
+use std::str::FromStr;
+
+use sqlx::{PgConnection, Row, postgres::PgConnectOptions};
+use worker::*;
+
+fn main() {}
+
+#[event(fetch)]
+async fn fetch(_req: Request, env: Env, _ctx: Context) -> Result<Response> {
+    let hyperdrive = env.hyperdrive("HYPERDRIVE")?;
+    let connection_string = hyperdrive.connection_string();
+    let opts = PgConnectOptions::from_str(&connection_string).map_err(|e| {
+        worker::Error::RustError(format!("invalid Hyperdrive connection string: {e}"))
+    })?;
+
+    let socket = Socket::builder()
+        .secure_transport(SecureTransport::StartTls)
+        .connect(opts.get_host(), opts.get_port())?;
+    // This has to be given a Socket because DNS resolution for *.worker.alt addresses is broken on
+    // workerd: https://github.com/cloudflare/workerd/issues/8391
+    let mut conn = PgConnection::connect_raw_tokio(socket, &opts)
+        .await
+        .map_err(|e| Error::RustError(format!("failed to connect to database: {e}")))?;
+
+    let row = sqlx::query("SELECT uuidv7()::text")
+        .fetch_one(&mut conn)
+        .await
+        .map_err(|e| Error::RustError(format!("select uuidv7() failed: {e}")))?;
+    let uuid: String = row.get(0);
+    Response::ok(uuid)
+}

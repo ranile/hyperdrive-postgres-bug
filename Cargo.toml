@@ -1,0 +1,29 @@
+[package]
+name = "hyperdrive-postgres-bug"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+worker = { git = "https://github.com/cloudflare/workers-rs", features = ["experimental_tokio", "axum", "http"], rev = "103f181" }
+worker-macros = { git = "https://github.com/cloudflare/workers-rs", features = ["http"], rev = "103f181" }
+http-body-util = "0.1.5"
+tracing-web = "0.1.0"
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "postgres", "macros", "chrono", "json"] }
+
+[patch.crates-io]
+# Pending https://github.com/tokio-rs/tokio/pull/8484
+tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+
+# Pending release of https://github.com/tokio-rs/mio/pull/1969
+mio = { git = "https://github.com/tokio-rs/mio", rev = "5e2b24a" }
+wasm-bindgen = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+wasm-bindgen-futures = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+wasm-bindgen-macro = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+wasm-bindgen-macro-support = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+wasm-bindgen-shared = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+js-sys = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+web-sys = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
+
+# https://github.com/transact-rs/sqlx/pull/4281 as a workaround for
+# https://github.com/cloudflare/workerd/issues/8391
+sqlx = { git = "https://github.com/Benjscho/sqlx", rev = "8a080b5" }
