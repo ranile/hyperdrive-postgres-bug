@@ -1,9 +1,24 @@
+mod slogger;
+
 use std::str::FromStr;
 
 use sqlx::{PgConnection, Row, postgres::PgConnectOptions};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::fmt::time::UtcTime;
+use tracing_subscriber::prelude::*;
 use worker::*;
 
-fn main() {}
+use slogger::LoggingSocket;
+use tracing_web::MakeConsoleWriter;
+
+fn main() {
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_ansi(false) // Only partially supported across JavaScript runtimes
+        .with_timer(UtcTime::rfc_3339()) // std::time is not available in browsers
+        .with_writer(MakeConsoleWriter)
+        .with_filter(LevelFilter::TRACE);
+    tracing_subscriber::registry().with(fmt_layer).init();
+}
 
 #[event(fetch)]
 async fn fetch(_req: Request, env: Env, _ctx: Context) -> Result<Response> {
@@ -16,6 +31,7 @@ async fn fetch(_req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let socket = Socket::builder()
         .secure_transport(SecureTransport::StartTls)
         .connect(opts.get_host(), opts.get_port())?;
+    let socket = LoggingSocket::new(socket);
     // This has to be given a Socket because DNS resolution for *.worker.alt addresses is broken on
     // workerd: https://github.com/cloudflare/workerd/issues/8391
     let mut conn = PgConnection::connect_raw_tokio(socket, &opts)
