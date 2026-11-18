@@ -4,14 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-worker = { git = "https://github.com/cloudflare/workers-rs", features = ["experimental_tokio", "axum", "http"], rev = "103f181" }
-worker-macros = { git = "https://github.com/cloudflare/workers-rs", features = ["http"], rev = "103f181" }
-http-body-util = "0.1.5"
+worker = { git = "https://github.com/cloudflare/workers-rs", features = ["experimental_tokio", "tokio-postgres"], rev = "103f181" }
 tracing-web = "0.1.0"
-sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "postgres", "macros", "chrono", "json"] }
-tokio = { version = "1.53.1", features = ["net","sync","time"] }
+tokio = { version = "1.53.1", default-features = false }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "time"] }
+tokio-postgres = { version = "0.7", features = ["js"], default-features = false }
+anyhow = "1.0.104"
 
 [patch.crates-io]
 # Pending https://github.com/tokio-rs/tokio/pull/8484
@@ -26,7 +25,3 @@ wasm-bindgen-macro-support = { git = "https://github.com/wasm-bindgen/wasm-bindg
 wasm-bindgen-shared = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
 js-sys = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
 web-sys = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
-
-# https://github.com/transact-rs/sqlx/pull/4281 as a workaround for
-# https://github.com/cloudflare/workerd/issues/8391
-sqlx = { git = "https://github.com/Benjscho/sqlx", rev = "8a080b5" }

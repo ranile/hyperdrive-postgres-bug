@@ -7,7 +7,11 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
+use std::future::Ready;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tokio_postgres::tls::{ChannelBinding, TlsConnect, TlsStream};
+use worker::postgres_tls::{PassthroughTls, PassthroughTlsError};
+use worker::Socket;
 
 pub struct LoggingSocket<S> {
     inner: S,
@@ -91,5 +95,23 @@ impl<S: AsyncWrite + Unpin> AsyncWrite for LoggingSocket<S> {
             tracing::trace!(target: "wire", dir = "send", "shutdown");
         }
         res
+    }
+}
+
+impl TlsConnect<LoggingSocket<Socket>> for PassthroughTls {
+    type Stream = LoggingSocket<Socket>;
+    type Error = PassthroughTlsError;
+    type Future = Ready<Result<LoggingSocket<Socket>, PassthroughTlsError>>;
+
+    fn connect(self, s: Self::Stream) -> Self::Future {
+        let tls = s.inner.start_tls();
+        let socket = LoggingSocket { inner: tls };
+        core::future::ready(Ok(socket))
+    }
+}
+
+impl TlsStream for LoggingSocket<Socket> {
+    fn channel_binding(&self) -> ChannelBinding {
+        ChannelBinding::none()
     }
 }

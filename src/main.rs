@@ -1,15 +1,13 @@
 mod slogger;
 
-use std::str::FromStr;
-
-use sqlx::{PgConnection, Row, postgres::PgConnectOptions};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::prelude::*;
 use worker::*;
 
-use slogger::LoggingSocket;
 use tracing_web::MakeConsoleWriter;
+
+use worker::postgres_tls::PassthroughTls;
 
 fn main() {
     let fmt_layer = tracing_subscriber::fmt::layer()
@@ -21,27 +19,45 @@ fn main() {
 }
 
 #[event(fetch)]
-async fn fetch(_req: Request, env: Env, _ctx: Context) -> Result<Response> {
+async fn main(_req: Request, env: Env, _ctx: Context) -> anyhow::Result<Response> {
     let hyperdrive = env.hyperdrive("HYPERDRIVE")?;
-    let connection_string = hyperdrive.connection_string();
-    let opts = PgConnectOptions::from_str(&connection_string).map_err(|e| {
-        worker::Error::RustError(format!("invalid Hyperdrive connection string: {e}"))
-    })?;
 
+    // Connect using Worker Socket
     let socket = Socket::builder()
         .secure_transport(SecureTransport::StartTls)
-        .connect(opts.get_host(), opts.get_port())?;
-    let socket = LoggingSocket::new(socket);
-    // This has to be given a Socket because DNS resolution for *.worker.alt addresses is broken on
-    // workerd: https://github.com/cloudflare/workerd/issues/8391
-    let mut conn = PgConnection::connect_raw_tokio(socket, &opts)
-        .await
-        .map_err(|e| Error::RustError(format!("failed to connect to database: {e}")))?;
+        .connect(hyperdrive.host(), hyperdrive.port())?;
 
-    let row = sqlx::query("SELECT uuidv7()::text")
-        .fetch_one(&mut conn)
-        .await
-        .map_err(|e| Error::RustError(format!("select uuidv7() failed: {e}")))?;
-    let uuid: String = row.get(0);
-    Response::ok(uuid)
+    let socket = slogger::LoggingSocket::new(socket);
+
+    let config = hyperdrive
+        .connection_string()
+        .parse::<tokio_postgres::Config>()?;
+
+    let (mut client, connection) = config.connect_raw(socket, PassthroughTls).await?;
+
+    wasm_bindgen_futures::spawn_local(async move {
+        if let Err(error) = connection.await {
+            console_log!("connection error: {:?}", error);
+        }
+    });
+
+    let tx = client.transaction().await?;
+    let statement = tx.prepare("SELECT generate_series(1, 10)").await?;
+
+    let portal = tx.bind(&statement, &[]).await?;
+    let rows = tx.query_portal(&portal, 10).await?;
+
+    let out = rows.into_iter().map(|r| r.get::<_, i32>(0)).collect::<Vec<_>>();
+
+    // Enqueue portal close
+    // https://github.com/rust-postgres/rust-postgres/blob/f1cb6ec0d5766b136cbd68f3010d64142a5daa66/tokio-postgres/src/portal.rs#L14-L25
+    drop(portal);
+
+    // Give the connection a chance to process the close; Drop just queues it
+    tx.query_one("SELECT 1", &[]).await?;
+    tx.commit().await?;
+
+    console_log!("{:?}", out);
+
+    Ok(Response::ok("ok")?)
 }
