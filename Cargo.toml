@@ -3,21 +3,25 @@ name = "hyperdrive-postgres-bug"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
-worker = { git = "https://github.com/cloudflare/workers-rs", features = ["experimental_tokio", "tokio-postgres"], rev = "103f181" }
+worker = { git = "https://github.com/cloudflare/workers-rs", features = ["tokio-postgres"], rev = "103f181" }
 tracing-web = "0.1.0"
 tokio = { version = "1.53.1", default-features = false }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "time"] }
 tokio-postgres = { version = "0.7", features = ["js"], default-features = false }
 anyhow = "1.0.104"
+time = { version = "0.3", features = ['wasm-bindgen'] }
 
 [patch.crates-io]
 # Pending https://github.com/tokio-rs/tokio/pull/8484
-tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
+# tokio = { git = "https://github.com/guybedford/tokio", tag = "1.54.1-cf.emscripten" }
 
 # Pending release of https://github.com/tokio-rs/mio/pull/1969
-mio = { git = "https://github.com/tokio-rs/mio", rev = "5e2b24a" }
+# mio = { git = "https://github.com/tokio-rs/mio", rev = "5e2b24a" }
 wasm-bindgen = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
 wasm-bindgen-futures = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }
 wasm-bindgen-macro = { git = "https://github.com/wasm-bindgen/wasm-bindgen", rev = "ce77fe1" }

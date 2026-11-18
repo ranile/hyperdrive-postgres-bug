@@ -308,6 +308,7 @@ name = "hyperdrive-postgres-bug"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "time",
  "tokio",
  "tokio-postgres",
  "tracing",
@@ -962,6 +963,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb87b95ec50ddfa440816d227a17b2ccbdda963a316a727fda0fc4334f7d134"
 dependencies = [
  "deranged",
+ "js-sys",
  "num-conv",
  "powerfmt",
  "serde_core",
@@ -1004,7 +1006,8 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 [[package]]
 name = "tokio"
 version = "1.54.1"
-source = "git+https://github.com/guybedford/tokio?tag=1.54.1-cf.emscripten#139555e3a8802bd35203a839bfc00898dc9a6118"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b52fd3255258d26fac7264ab5a76b53c13367136dc011d3d6ad4f8ed070396a3"
 dependencies = [
  "bytes",
  "pin-project-lite",
@@ -1469,8 +1472,3 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
-
-[[patch.unused]]
-name = "mio"
-version = "1.2.4"
-source = "git+https://github.com/tokio-rs/mio?rev=5e2b24a#5e2b24a46287dfe06ad025b6ff5b997497bdb606"

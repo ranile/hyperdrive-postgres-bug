@@ -9,7 +9,8 @@ use tracing_web::MakeConsoleWriter;
 
 use worker::postgres_tls::PassthroughTls;
 
-fn main() {
+#[event(start)]
+fn start() {
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_ansi(false) // Only partially supported across JavaScript runtimes
         .with_timer(UtcTime::rfc_3339()) // std::time is not available in browsers
@@ -47,7 +48,10 @@ async fn main(_req: Request, env: Env, _ctx: Context) -> anyhow::Result<Response
     let portal = tx.bind(&statement, &[]).await?;
     let rows = tx.query_portal(&portal, 10).await?;
 
-    let out = rows.into_iter().map(|r| r.get::<_, i32>(0)).collect::<Vec<_>>();
+    let out = rows
+        .into_iter()
+        .map(|r| r.get::<_, i32>(0))
+        .collect::<Vec<_>>();
 
     // Enqueue portal close
     // https://github.com/rust-postgres/rust-postgres/blob/f1cb6ec0d5766b136cbd68f3010d64142a5daa66/tokio-postgres/src/portal.rs#L14-L25
