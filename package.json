@@ -1,21 +1,22 @@
 {
-	"name": "hyperdrive-failure",
-	"version": "0.0.0",
-	"private": true,
-	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"cf-typegen": "wrangler types"
-	},
-	"devDependencies": {
-		"@cloudflare/vitest-plugin": "^1.4.3",
-		"@types/pg": "^8.23.1",
-		"typescript": "^5.5.2",
-		"vitest": "~5.0.3",
-		"wrangler": "^4"
-	},
-	"dependencies": {
-		"pg": "^8.23.1"
-	}
+    "name": "hyperdrive-failure",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev",
+        "start": "wrangler dev",
+        "cf-typegen": "wrangler types"
+    },
+    "devDependencies": {
+        "@cloudflare/vitest-plugin": "^1.4.3",
+        "@types/pg": "^8.23.1",
+        "typescript": "^5.5.2",
+        "vitest": "~5.0.3",
+        "wrangler": "^4"
+    },
+    "dependencies": {
+        "pg": "^8.23.1",
+        "pg-cursor": "^2.22.1"
+    }
 }
